@@ -13,17 +13,18 @@ def create_database():
 	c.execute('PRAGMA foreign_keys = ON')
 	c.execute('''
 		CREATE TABLE devices
-			(id INTEGER PRIMARY KEY,
+			(devid INTEGER PRIMARY KEY,
 			 mac TEXT)
 		''')
 	c.execute('''
 		CREATE TABLE connections
-			(device INTEGER,
+			(connid INTEGER PRIMARY KEY,
+			 device INTEGER,
 			 start_date INTEGER,
 			 latest_date INTEGER,
 			 ip TEXT,
 			 open INTEGER DEFAULT 1,
-			 FOREIGN KEY(device) REFERENCES devices(id))
+			 FOREIGN KEY(device) REFERENCES devices(devid))
 		''')
 	conn.close()
 
@@ -39,7 +40,7 @@ def dump_database():
 	c.execute('''
 		SELECT mac, start_date, latest_date, ip, open
 		FROM devices, connections
-		WHERE devices.id = connections.device
+		WHERE devices.devid = connections.device
 		''')
 	print(c.fetchall())
 	conn.close()
