@@ -117,7 +117,7 @@ if __name__ == "__main__":
 	if args.edit_desc:
 		edit_description()
 
-	if not (args.create_db or args.dump or args.open_conns or args.edit_desc):
+	if not any(vars(args).values()): # No arguments passed
 		parser.parse_args('-h'.split())
 
 	# provide options to
