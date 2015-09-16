@@ -2,7 +2,7 @@
 import sqlite3
 from bs4 import BeautifulSoup
 
-from macshared import DATABASE_NAME, insert_example_data, insert_example_data_closed
+from macshared import DATABASE_NAME, create_notification
 
 def get_open_connection(mac, ip):
 	conn = sqlite3.connect(DATABASE_NAME)
@@ -128,5 +128,4 @@ if __name__ == "__main__":
 	close_missing_connections(macs)
 
 	if new_devices:
-		# TODO: send email with notification
-		print("NEW DEVICES DETECTED: " + str(new_devices))
+		create_notification(new_devices)
