@@ -58,6 +58,24 @@ def insert_new_connection(mac, ip):
 	conn.commit()
 	conn.close()
 
+def close_missing_connections(macs):
+	def param_list(length):
+		if length is 0:
+			return "()"
+		else:
+			return "(" + ("?," * (length-1)) + "?)"
+
+	conn = sqlite3.connect(DATABASE_NAME)
+	c = conn.cursor()
+	c.execute("""
+		UPDATE connections
+		SET open = 0
+		WHERE device IN
+			(SELECT devid from devices
+			 WHERE mac NOT IN """ + param_list(len(macs)) +")", tuple(macs))
+	conn.commit()
+	conn.close()
+
 def get_devid(mac):
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
@@ -87,11 +105,16 @@ if __name__ == "__main__":
 	print("Running MAC Monitor\n")
 
 	# TODO: get data from somewhere
-	data = [('f8-e0-79-bf-b0-64', '192.168.0.2'),] # list of current hosts
+	data = [('f8-e0-79-bf-b0-64', '192.168.0.2'),
+			('f8-e0-79-bf-b0-63', '192.168.0.2'),
+			('f8-e0-79-bf-b0-62', '192.168.0.2'),] # list of current hosts
+	#data = []
 
 	new_devices = []
+	macs = []
 
 	for (mac, ip) in data:
+		macs.append(mac)
 		if get_devid(mac):
 			if get_open_connection(mac, ip):
 				update_latest_date(get_open_connection(mac, ip))
@@ -102,7 +125,7 @@ if __name__ == "__main__":
 			insert_new_device(mac)
 			insert_new_connection(mac, ip)
 
-	# TODO: close connections not listed in data
+	close_missing_connections(macs)
 
 	if new_devices:
 		# TODO: send email with notification
