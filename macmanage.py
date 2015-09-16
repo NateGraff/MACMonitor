@@ -2,7 +2,7 @@
 import sqlite3
 import os
 
-DATABASE_NAME = "macmonitor.db"
+from macshared import DATABASE_NAME, insert_example_data
 
 def create_database():
 	print("Creating MAC Monitor Sqlite3 Database")
@@ -39,20 +39,6 @@ def dump_database():
 		WHERE devices.id = connections.device
 		''')
 	print(c.fetchall())
-	conn.close()
-
-def insert_example_data():
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		INSERT INTO devices(mac)
-		VALUES ("foo")
-		''')
-	c.execute('''
-		INSERT INTO connections(device, start_date, latest_date, ip)
-		VALUES (1, 123, 456, "bar")
-		''')
-	conn.commit()
 	conn.close()
 
 if __name__ == "__main__":
