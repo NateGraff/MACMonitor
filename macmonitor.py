@@ -28,8 +28,8 @@ def update_latest_date(connid):
 		UPDATE connections
 		SET latest_date =
 			(SELECT strftime('%s', 'now'))
-		WHERE connid = 
-		""" + str(connid))
+		WHERE connid = ?
+		""", (str(connid),))
 	conn.commit()
 	conn.close()
 
