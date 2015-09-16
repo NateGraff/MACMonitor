@@ -18,8 +18,8 @@ def create_database():
 	c.execute('''
 		CREATE TABLE connections
 			(device INTEGER,
-			 start_date INTEGER, # unix epoch
-			 latest_date INTEGER, # unix epoch
+			 start_date INTEGER,
+			 latest_date INTEGER,
 			 ip TEXT,
 			 open INTEGER DEFAULT 1,
 			 FOREIGN KEY(device) REFERENCES devices(id))
