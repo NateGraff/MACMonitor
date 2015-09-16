@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sqlite3
 import os
+import argparse
 
 from macshared import DATABASE_NAME, insert_example_data
 
@@ -31,6 +32,8 @@ def delete_database():
 	os.remove(DATABASE_NAME)
 
 def dump_database():
+	print("MAC Monitor Database Dump:")
+	print("Inner join on MAC id")
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
 	c.execute('''
@@ -42,11 +45,24 @@ def dump_database():
 	conn.close()
 
 if __name__ == "__main__":
-	print("Running MAC Manage")
-	delete_database()
-	create_database()
-	insert_example_data()
-	dump_database()
+	print("Running MAC Manage\n")
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-c', '--create-db', action='store_true',
+		help="Create a blank MAC Monitor database")
+	parser.add_argument('-d', '--dump', action='store_true',
+		help="Dump the contents of the MAC Monitor database")
+	args = parser.parse_args()
+
+	if args.create_db:
+		delete_database()
+		create_database()
+
+	if args.dump:
+		dump_database()
+
+	if not (args.create_db or args.dump):
+		parser.parse_args('-h'.split())
+
 	# provide options to
 	#   - Print statistics
-	#   - clean/initialize database
