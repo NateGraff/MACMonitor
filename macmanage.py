@@ -3,7 +3,7 @@ import sqlite3
 import os
 import argparse
 
-from macshared import DATABASE_NAME, insert_example_data
+from macshared import DATABASE_NAME
 
 def create_database():
 	print("Creating MAC Monitor Sqlite3 Database")
