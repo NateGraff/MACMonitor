@@ -18,7 +18,8 @@ def create_database():
 	c.execute('''
 		CREATE TABLE connections
 			(device INTEGER,
-			 date INTEGER,
+			 start_date INTEGER, # unix epoch
+			 latest_date INTEGER, # unix epoch
 			 ip TEXT,
 			 open INTEGER DEFAULT 1,
 			 FOREIGN KEY(device) REFERENCES devices(id))
@@ -33,7 +34,7 @@ def dump_database():
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
 	c.execute('''
-		SELECT mac, date, ip, open
+		SELECT mac, start_date, latest_date, ip, open
 		FROM devices, connections
 		WHERE devices.id = connections.device
 		''')
@@ -48,8 +49,8 @@ def insert_example_data():
 		VALUES ("foo")
 		''')
 	c.execute('''
-		INSERT INTO connections(device, date, ip)
-		VALUES (1, 123, "bar")
+		INSERT INTO connections(device, start_date, latest_date, ip)
+		VALUES (1, 123, 456, "bar")
 		''')
 	conn.commit()
 	conn.close()
