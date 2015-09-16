@@ -29,31 +29,3 @@ def get_connection_time(mac, ip):
 	row = c.fetchone()
 	conn.close()
 	return str(datetime.fromtimestamp(row[0]))
-
-def insert_example_data():
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		INSERT INTO devices(mac)
-		VALUES ("foo")
-		''')
-	c.execute('''
-		INSERT INTO connections(device, start_date, latest_date, ip)
-		VALUES (1, 123, 456, "bar")
-		''')
-	conn.commit()
-	conn.close()
-
-def insert_example_data_closed():
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		INSERT INTO devices(mac)
-		VALUES ("foo")
-		''')
-	c.execute('''
-		INSERT INTO connections(device, start_date, latest_date, ip, open)
-		VALUES (1, 123, 456, "bar", 0)
-		''')
-	conn.commit()
-	conn.close()
