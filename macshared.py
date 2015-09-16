@@ -17,7 +17,7 @@ def create_notification(new_conns):
 		data.append([mac, ip, start_date])
 
 	message += tabulate(data, ["MAC", "IP", "Joined Network"])
-	message += "\n"
+	message += "\n\n"
 
 	with open(FILE_PATH + filename, 'a') as notif:
 		notif.write(message)

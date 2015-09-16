@@ -16,7 +16,8 @@ def create_database():
 	c.execute('''
 		CREATE TABLE devices
 			(devid INTEGER PRIMARY KEY,
-			 mac TEXT)
+			 mac TEXT,
+			 description TEXT DEFAULT NULL)
 		''')
 	c.execute('''
 		CREATE TABLE connections
@@ -37,17 +38,17 @@ def delete_database():
 
 def dump_database():
 	print("MAC Monitor Database Dump:")
-	print("Inner join on MAC id")
+	print("Inner join on device ID")
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
 	c.execute('''
-		SELECT mac, start_date, latest_date, ip, open
+		SELECT mac, start_date, latest_date, ip, open, description
 		FROM devices, connections
 		WHERE devices.devid = connections.device
 		ORDER BY connections.latest_date DESC
 		''')
 	data = c.fetchall()
-	print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open"], tablefmt="psql"))
+	print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open", "Description"], tablefmt="psql"))
 	conn.close()
 
 def open_connections():
@@ -56,15 +57,37 @@ def open_connections():
 	c = conn.cursor()
 	data = []
 	for row in c.execute('''
-		SELECT d.mac, c.ip, c.start_date
+		SELECT d.mac, c.ip, c.start_date, d.description
 		FROM devices d, connections c
 		WHERE c.device = d.devid
 		AND c.open = 1
 		ORDER BY c.ip
 		'''):
 		timedelta = datetime.now() - datetime.fromtimestamp(row[2])
-		data.append([row[0], row[1], timedelta])
-	print(tabulate(data, ["MAC", "IP", "Connection Time"], tablefmt="psql"))
+		data.append([row[0], row[1], timedelta, row[3]])
+	print(tabulate(data, ["MAC", "IP", "Connection Time", "Description"], tablefmt="psql"))
+	conn.close()
+
+def edit_description():
+	print("Choose a device to edit description:")
+	conn = sqlite3.connect(DATABASE_NAME)
+	c = conn.cursor()
+	c.execute('''
+		SELECT devid, mac, description FROM devices
+		''')
+	macs = c.fetchall()
+	print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
+	devid = input("Enter ID or press 'q' to quit: ")
+	if devid is 'q':
+		return
+	else:
+		desc = input("Enter description for ID %d: " % int(devid))
+		c.execute('''
+			UPDATE devices
+			SET description = ?
+			WHERE devid = ?
+			''', (desc, int(devid),))
+	conn.commit()
 	conn.close()
 
 if __name__ == "__main__":
@@ -77,6 +100,8 @@ if __name__ == "__main__":
 		help="Dump the contents of the MAC Monitor database")
 	parser.add_argument('-o', '--open-conns', action='store_true',
 		help="List currently open connections")
+	parser.add_argument('-e', '--edit-desc', action='store_true',
+		help="Edit the description of a device")
 	args = parser.parse_args()
 
 	if args.create_db:
@@ -89,7 +114,10 @@ if __name__ == "__main__":
 	if args.open_conns:
 		open_connections()
 
-	if not (args.create_db or args.dump or args.open_conns):
+	if args.edit_desc:
+		edit_description()
+
+	if not (args.create_db or args.dump or args.open_conns or args.edit_desc):
 		parser.parse_args('-h'.split())
 
 	# provide options to
