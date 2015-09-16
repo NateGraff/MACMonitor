@@ -121,7 +121,7 @@ if __name__ == "__main__":
 			else:
 				insert_new_connection(mac, ip)
 		else:
-			new_devices += [(mac, ip,)]
+			new_devices.append((mac, ip,))
 			insert_new_device(mac)
 			insert_new_connection(mac, ip)
 
