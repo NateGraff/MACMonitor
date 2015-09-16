@@ -45,6 +45,19 @@ def dump_database():
 	print(c.fetchall())
 	conn.close()
 
+def open_connections():
+	conn = sqlite3.connect(DATABASE_NAME)
+	c = conn.cursor()
+	c.execute('''
+		SELECT devices.mac, connections.ip FROM devices, connections
+		WHERE connections.device = devices.devid
+		AND connections.open = 1
+		''')
+	rows = c.fetchall()
+	for row in rows:
+		print(row)
+	conn.close()
+
 if __name__ == "__main__":
 	print("Running MAC Manage\n")
 
@@ -53,6 +66,8 @@ if __name__ == "__main__":
 		help="Create a blank MAC Monitor database")
 	parser.add_argument('-d', '--dump', action='store_true',
 		help="Dump the contents of the MAC Monitor database")
+	parser.add_argument('-o', '--open-conns', action='store_true',
+		help="List currently open connections")
 	args = parser.parse_args()
 
 	if args.create_db:
@@ -62,7 +77,10 @@ if __name__ == "__main__":
 	if args.dump:
 		dump_database()
 
-	if not (args.create_db or args.dump):
+	if args.open_conns:
+		open_connections()
+
+	if not (args.create_db or args.dump or args.open_conns):
 		parser.parse_args('-h'.split())
 
 	# provide options to
