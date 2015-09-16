@@ -88,6 +88,8 @@ if __name__ == "__main__":
 	# TODO: get data from somewhere
 	data = [('f8-e0-79-bf-b0-64', '192.168.0.2'),] # list of current hosts
 
+	new_devices = []
+
 	for (mac, ip) in data:
 		if get_devid(mac):
 			if get_open_connection(mac):
@@ -95,6 +97,12 @@ if __name__ == "__main__":
 			else:
 				insert_new_connection(mac, ip)
 		else:
-			# TODO: send email with notification
+			new_devices += [(mac, ip,)]
 			insert_new_device(mac)
 			insert_new_connection(mac, ip)
+
+	# TODO: close connections not listed in data
+
+	if new_devices:
+		# TODO: send email with notification
+		print("NEW DEVICES DETECTED: " + str(new_devices))
