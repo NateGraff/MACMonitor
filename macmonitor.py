@@ -107,7 +107,7 @@ if __name__ == "__main__":
 	# TODO: get data from somewhere
 	data = [('f8-e0-79-bf-b0-64', '192.168.0.2'),
 			('f8-e0-79-bf-b0-63', '192.168.0.2'),
-			('f8-e0-79-bf-b0-61', '192.168.0.2'),] # list of current hosts
+			('f8-e0-79-bf-b0-62', '192.168.0.2'),] # list of current hosts
 	#data = []
 
 	new_devices = []

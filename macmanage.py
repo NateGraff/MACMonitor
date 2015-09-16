@@ -2,6 +2,8 @@
 import sqlite3
 import os
 import argparse
+from datetime import datetime
+from tabulate import tabulate
 
 from macshared import DATABASE_NAME
 
@@ -26,6 +28,7 @@ def create_database():
 			 open INTEGER DEFAULT 1,
 			 FOREIGN KEY(device) REFERENCES devices(devid))
 		''')
+	conn.commit()
 	conn.close()
 
 def delete_database():
@@ -41,21 +44,27 @@ def dump_database():
 		SELECT mac, start_date, latest_date, ip, open
 		FROM devices, connections
 		WHERE devices.devid = connections.device
+		ORDER BY connections.latest_date DESC
 		''')
-	print(c.fetchall())
+	data = c.fetchall()
+	print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open"], tablefmt="psql"))
 	conn.close()
 
 def open_connections():
+	print("Open Connections:")
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
-	c.execute('''
-		SELECT devices.mac, connections.ip FROM devices, connections
-		WHERE connections.device = devices.devid
-		AND connections.open = 1
-		''')
-	rows = c.fetchall()
-	for row in rows:
-		print(row)
+	data = []
+	for row in c.execute('''
+		SELECT d.mac, c.ip, c.start_date
+		FROM devices d, connections c
+		WHERE c.device = d.devid
+		AND c.open = 1
+		ORDER BY c.ip
+		'''):
+		timedelta = datetime.now() - datetime.fromtimestamp(row[2])
+		data.append([row[0], row[1], timedelta])
+	print(tabulate(data, ["MAC", "IP", "Connection Time"], tablefmt="psql"))
 	conn.close()
 
 if __name__ == "__main__":

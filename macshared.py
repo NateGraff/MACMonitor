@@ -1,6 +1,7 @@
 # Shared resources for MAC Manage
 import sqlite3
 from datetime import datetime
+from tabulate import tabulate
 
 DATABASE_NAME = "macmonitor.db"
 FILE_PATH = "C:/Users/MyUsername/Desktop/"
@@ -9,9 +10,15 @@ NETWORK_SSID = "MyNetworkSSID"
 def create_notification(new_conns):
 	filename = "NEW_CONNECTIONS.txt"
 	message = "New connections detected on %s:\n" % NETWORK_SSID
+	data = []
+
 	for (mac, ip) in new_conns:
 		start_date = get_connection_time(mac, ip)
-		message += "MAC: %s, IP: %s, Joined network: %s\n" % (mac, ip, start_date)
+		data.append([mac, ip, start_date])
+
+	message += tabulate(data, ["MAC", "IP", "Joined Network"])
+	message += "\n"
+
 	with open(FILE_PATH + filename, 'a') as notif:
 		notif.write(message)
 
