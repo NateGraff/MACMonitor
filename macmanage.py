@@ -27,7 +27,7 @@ def create_database():
 			 latest_date INTEGER,
 			 ip TEXT,
 			 open INTEGER DEFAULT 1,
-			 FOREIGN KEY(device) REFERENCES devices(devid))
+			 FOREIGN KEY(device) REFERENCES devices(devid) ON DELETE CASCADE)
 		''')
 	conn.commit()
 	conn.close()
@@ -90,6 +90,26 @@ def edit_description():
 	conn.commit()
 	conn.close()
 
+def forget_device():
+	print("Choose a device to forget:")
+	conn = sqlite3.connect(DATABASE_NAME)
+	c = conn.cursor()
+	c.execute('''
+		SELECT devid, mac, description FROM devices
+		''')
+	macs = c.fetchall()
+	print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
+	devid = input("Enter ID or press 'q' to quit: ")
+	if devid is 'q':
+		return
+	else:
+		c.execute('''
+			DELETE FROM devices
+			WHERE devid = ?
+			''', (int(devid),))
+	conn.commit()
+	conn.close()	
+
 if __name__ == "__main__":
 	print("Running MAC Manage\n")
 
@@ -102,6 +122,8 @@ if __name__ == "__main__":
 		help="List currently open connections")
 	parser.add_argument('-e', '--edit-desc', action='store_true',
 		help="Edit the description of a device")
+	parser.add_argument('-f', '--forget-device', action='store_true',
+		help="Forget a device and its connections")
 	args = parser.parse_args()
 
 	if args.create_db:
@@ -116,6 +138,9 @@ if __name__ == "__main__":
 
 	if args.edit_desc:
 		edit_description()
+
+	if args.forget_device:
+		forget_device()
 
 	if not any(vars(args).values()): # No arguments passed
 		parser.parse_args('-h'.split())
