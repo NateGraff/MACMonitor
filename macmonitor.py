@@ -4,15 +4,16 @@ from bs4 import BeautifulSoup
 
 from macshared import DATABASE_NAME, insert_example_data, insert_example_data_closed
 
-def get_open_connection(mac):
+def get_open_connection(mac, ip):
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
 	c.execute('''
 		SELECT connid FROM connections
 		INNER JOIN devices on connections.device = devices.devid
 		WHERE connections.open = 1
+		AND connections.ip = ?
 		AND devices.mac = ?
-		''', (mac,))
+		''', (ip, mac,))
 	row = c.fetchone()
 	conn.close()
 
@@ -92,8 +93,8 @@ if __name__ == "__main__":
 
 	for (mac, ip) in data:
 		if get_devid(mac):
-			if get_open_connection(mac):
-				update_latest_date(get_open_connection(mac))
+			if get_open_connection(mac, ip):
+				update_latest_date(get_open_connection(mac, ip))
 			else:
 				insert_new_connection(mac, ip)
 		else:
