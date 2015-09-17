@@ -30,7 +30,7 @@
 import sqlite3
 import os
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from tabulate import tabulate
 
 from macshared import DATABASE_NAME
@@ -133,6 +133,42 @@ def forget_device():
 				''', (int(devid),))
 		conn.commit()
 
+def device_history(limit):
+	print("Choose a device to display history:")
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute('''
+			SELECT devid, mac, description FROM devices
+			''')
+		macs = c.fetchall()
+		print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
+		devid = input("Enter ID or press 'q' to quit: ")
+		if devid is 'q':
+			return
+		else:
+			sel = macs[int(devid) - 1]
+			print("\nDevice: %s (%s)" % (sel[1], sel[2]))
+			c.execute('''
+				SELECT start_date, latest_date, ip, open
+				FROM connections
+				WHERE device = ?
+				ORDER BY latest_date DESC
+				LIMIT ?
+				''', (int(devid),limit,))
+			connections = c.fetchall()
+			output = []
+			connection_avg = 0
+			for conn in connections:
+				start = datetime.fromtimestamp(conn[0])
+				end = datetime.fromtimestamp(conn[1])
+				diff = end - start
+				connection_avg += diff.total_seconds()
+				output.append((start,end,diff,conn[2],conn[3],))
+
+			connection_avg /= len(connections)
+			print("Average connection duration: %s" % str(timedelta(seconds=connection_avg)))
+			print(tabulate(output, ["Start", "End", "Duration", "IP", "Open"], tablefmt="psql"))
+
 if __name__ == "__main__":
 	print("Running MAC Manage\n")
 
@@ -147,6 +183,8 @@ if __name__ == "__main__":
 		help="Edit the description of a device")
 	parser.add_argument('-f', '--forget-device', action='store_true',
 		help="Forget a device and its connections")
+	parser.add_argument('--history', nargs="?", const=100,
+		help="Show connection history for a specific device")
 	args = parser.parse_args()
 
 	if args.create_db:
@@ -165,8 +203,8 @@ if __name__ == "__main__":
 	if args.forget_device:
 		forget_device()
 
+	if args.history:
+		device_history(args.history)
+
 	if not any(vars(args).values()): # No arguments passed
 		parser.parse_args('-h'.split())
-
-	# provide options to
-	#   - Print statistics
