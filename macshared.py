@@ -45,16 +45,16 @@ def create_notification(new_conns):
 		notif.write(message)
 
 def get_connection_time(mac, ip):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		SELECT c.start_date
-		FROM devices d, connections c
-		WHERE d.devid = c.device
-		AND d.mac = ?
-		AND c.ip = ?
-		AND c.open = 1
-		''', (mac, ip,))
-	row = c.fetchone()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute('''
+			SELECT c.start_date
+			FROM devices d, connections c
+			WHERE d.devid = c.device
+			AND d.mac = ?
+			AND c.ip = ?
+			AND c.open = 1
+			''', (mac, ip,))
+		row = c.fetchone()
+	
 	return str(datetime.fromtimestamp(row[0]))

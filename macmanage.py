@@ -38,27 +38,26 @@ from macshared import DATABASE_NAME
 def create_database():
 	print("Creating MAC Monitor Sqlite3 Database")
 
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('PRAGMA foreign_keys = ON')
-	c.execute('''
-		CREATE TABLE devices
-			(devid INTEGER PRIMARY KEY,
-			 mac TEXT,
-			 description TEXT DEFAULT NULL)
-		''')
-	c.execute('''
-		CREATE TABLE connections
-			(connid INTEGER PRIMARY KEY,
-			 device INTEGER,
-			 start_date INTEGER,
-			 latest_date INTEGER,
-			 ip TEXT,
-			 open INTEGER DEFAULT 1,
-			 FOREIGN KEY(device) REFERENCES devices(devid) ON DELETE CASCADE)
-		''')
-	conn.commit()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute('PRAGMA foreign_keys = ON')
+		c.execute('''
+			CREATE TABLE devices
+				(devid INTEGER PRIMARY KEY,
+				 mac TEXT,
+				 description TEXT DEFAULT NULL)
+			''')
+		c.execute('''
+			CREATE TABLE connections
+				(connid INTEGER PRIMARY KEY,
+				 device INTEGER,
+				 start_date INTEGER,
+				 latest_date INTEGER,
+				 ip TEXT,
+				 open INTEGER DEFAULT 1,
+				 FOREIGN KEY(device) REFERENCES devices(devid) ON DELETE CASCADE)
+			''')
+		conn.commit()
 
 def delete_database():
 	print("Deleting MAC Monitor Sqlite3 Database")
@@ -67,76 +66,72 @@ def delete_database():
 def dump_database():
 	print("MAC Monitor Database Dump:")
 	print("Inner join on device ID")
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		SELECT mac, start_date, latest_date, ip, open, description
-		FROM devices, connections
-		WHERE devices.devid = connections.device
-		ORDER BY connections.latest_date DESC
-		''')
-	data = c.fetchall()
-	print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open", "Description"], tablefmt="psql"))
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute('''
+			SELECT mac, start_date, latest_date, ip, open, description
+			FROM devices, connections
+			WHERE devices.devid = connections.device
+			ORDER BY connections.latest_date DESC
+			''')
+		data = c.fetchall()
+		print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open", "Description"], tablefmt="psql"))
 
 def open_connections():
 	print("Open Connections:")
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	data = []
-	for row in c.execute('''
-		SELECT d.mac, c.ip, c.start_date, d.description
-		FROM devices d, connections c
-		WHERE c.device = d.devid
-		AND c.open = 1
-		ORDER BY c.ip
-		'''):
-		timedelta = datetime.now() - datetime.fromtimestamp(row[2])
-		data.append([row[0], row[1], timedelta, row[3]])
-	print(tabulate(data, ["MAC", "IP", "Connection Time", "Description"], tablefmt="psql"))
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		data = []
+		for row in c.execute('''
+			SELECT d.mac, c.ip, c.start_date, d.description
+			FROM devices d, connections c
+			WHERE c.device = d.devid
+			AND c.open = 1
+			ORDER BY c.ip
+			'''):
+			timedelta = datetime.now() - datetime.fromtimestamp(row[2])
+			data.append([row[0], row[1], timedelta, row[3]])
+		print(tabulate(data, ["MAC", "IP", "Connection Time", "Description"], tablefmt="psql"))
 
 def edit_description():
 	print("Choose a device to edit description:")
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		SELECT devid, mac, description FROM devices
-		''')
-	macs = c.fetchall()
-	print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
-	devid = input("Enter ID or press 'q' to quit: ")
-	if devid is 'q':
-		return
-	else:
-		desc = input("Enter description for ID %d: " % int(devid))
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
 		c.execute('''
-			UPDATE devices
-			SET description = ?
-			WHERE devid = ?
-			''', (desc, int(devid),))
-	conn.commit()
-	conn.close()
+			SELECT devid, mac, description FROM devices
+			''')
+		macs = c.fetchall()
+		print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
+		devid = input("Enter ID or press 'q' to quit: ")
+		if devid is 'q':
+			return
+		else:
+			desc = input("Enter description for ID %d: " % int(devid))
+			c.execute('''
+				UPDATE devices
+				SET description = ?
+				WHERE devid = ?
+				''', (desc, int(devid),))
+		conn.commit()
 
 def forget_device():
 	print("Choose a device to forget:")
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		SELECT devid, mac, description FROM devices
-		''')
-	macs = c.fetchall()
-	print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
-	devid = input("Enter ID or press 'q' to quit: ")
-	if devid is 'q':
-		return
-	else:
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
 		c.execute('''
-			DELETE FROM devices
-			WHERE devid = ?
-			''', (int(devid),))
-	conn.commit()
-	conn.close()
+			SELECT devid, mac, description FROM devices
+			''')
+		macs = c.fetchall()
+		print(tabulate(macs, ["ID", "MAC", "Description"], tablefmt="psql"))
+		devid = input("Enter ID or press 'q' to quit: ")
+		if devid is 'q':
+			return
+		else:
+			c.execute('''
+				DELETE FROM devices
+				WHERE devid = ?
+				''', (int(devid),))
+		conn.commit()
 
 if __name__ == "__main__":
 	print("Running MAC Manage\n")

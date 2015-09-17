@@ -34,17 +34,16 @@ import re
 from macshared import DATABASE_NAME, create_notification
 
 def get_open_connection(mac, ip):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute('''
-		SELECT connid FROM connections
-		INNER JOIN devices on connections.device = devices.devid
-		WHERE connections.open = 1
-		AND connections.ip = ?
-		AND devices.mac = ?
-		''', (ip, mac,))
-	row = c.fetchone()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute('''
+			SELECT connid FROM connections
+			INNER JOIN devices on connections.device = devices.devid
+			WHERE connections.open = 1
+			AND connections.ip = ?
+			AND devices.mac = ?
+			''', (ip, mac,))
+		row = c.fetchone()
 
 	if row:
 		return row[0]
@@ -52,40 +51,38 @@ def get_open_connection(mac, ip):
 		return None
 
 def update_latest_date(connid):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute("""
-		UPDATE connections
-		SET latest_date =
-			(SELECT strftime('%s', 'now'))
-		WHERE connid = ?
-		""", (str(connid),))
-	conn.commit()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute("""
+			UPDATE connections
+			SET latest_date =
+				(SELECT strftime('%s', 'now'))
+			WHERE connid = ?
+			""", (str(connid),))
+		conn.commit()
 
 def insert_new_connection(mac, ip):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute("""
-		UPDATE connections
-		SET open = 0
-		WHERE device = 
-			(SELECT devid from devices
-			 WHERE mac = ?)
-		""", (mac,))
-	c.execute("""
-		INSERT INTO connections(device, start_date, latest_date, ip)
-		VALUES
-		(
-			(SELECT devid from devices
-			 WHERE mac = ?),
-			(SELECT strftime('%s', 'now')),
-			(SELECT strftime('%s', 'now')),
-			?
-		)
-		""", (mac, ip,))
-	conn.commit()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute("""
+			UPDATE connections
+			SET open = 0
+			WHERE device = 
+				(SELECT devid from devices
+				 WHERE mac = ?)
+			""", (mac,))
+		c.execute("""
+			INSERT INTO connections(device, start_date, latest_date, ip)
+			VALUES
+			(
+				(SELECT devid from devices
+				 WHERE mac = ?),
+				(SELECT strftime('%s', 'now')),
+				(SELECT strftime('%s', 'now')),
+				?
+			)
+			""", (mac, ip,))
+		conn.commit()
 
 def close_missing_connections(macs):
 	def param_list(length):
@@ -94,26 +91,24 @@ def close_missing_connections(macs):
 		else:
 			return "(" + ("?," * (length-1)) + "?)"
 
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute("""
-		UPDATE connections
-		SET open = 0
-		WHERE device IN
-			(SELECT devid from devices
-			 WHERE mac NOT IN """ + param_list(len(macs)) +")", tuple(macs))
-	conn.commit()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute("""
+			UPDATE connections
+			SET open = 0
+			WHERE device IN
+				(SELECT devid from devices
+				 WHERE mac NOT IN """ + param_list(len(macs)) +")", tuple(macs))
+		conn.commit()
 
 def get_devid(mac):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute("""
-		SELECT devid from devices
-		WHERE mac = ?
-		""", (mac,))
-	row = c.fetchone()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute("""
+			SELECT devid from devices
+			WHERE mac = ?
+			""", (mac,))
+		row = c.fetchone()
 
 	if row:
 		return row[0]
@@ -121,14 +116,13 @@ def get_devid(mac):
 		return None
 
 def insert_new_device(mac, desc):
-	conn = sqlite3.connect(DATABASE_NAME)
-	c = conn.cursor()
-	c.execute("""
-		INSERT INTO devices(mac, description)
-		VALUES (?,?)
-		""", (mac, desc,))
-	conn.commit()
-	conn.close()
+	with sqlite3.connect(DATABASE_NAME) as conn:
+		c = conn.cursor()
+		c.execute("""
+			INSERT INTO devices(mac, description)
+			VALUES (?,?)
+			""", (mac, desc,))
+		conn.commit()
 
 def scan_network():
 	nmap_output = subprocess.check_output(["nmap", "-n", "-sP", "192.168.1.1/24"]).decode("utf-8")
