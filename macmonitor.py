@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sqlite3
-from bs4 import BeautifulSoup
+import subprocess
+import re
 
 from macshared import DATABASE_NAME, create_notification
 
@@ -91,29 +92,35 @@ def get_devid(mac):
 	else:
 		return None
 
-def insert_new_device(mac):
+def insert_new_device(mac, desc):
 	conn = sqlite3.connect(DATABASE_NAME)
 	c = conn.cursor()
 	c.execute("""
-		INSERT INTO devices(mac)
-		VALUES (?)
-		""", (mac,))
+		INSERT INTO devices(mac, description)
+		VALUES (?,?)
+		""", (mac, desc,))
 	conn.commit()
 	conn.close()
+
+def scan_network():
+	nmap_output = subprocess.check_output(["nmap", "-n", "-sP", "192.168.1.1/24"]).decode("utf-8")
+	
+	host_pattern = r"Nmap scan report for (\d{3}\.\d{3}\.\d+?\.\d+).*?MAC Address: (.{17}) \((.*?)\)"
+	matcher = re.compile(host_pattern, re.DOTALL)
+	data = matcher.findall(nmap_output)
+
+	return data
+
 
 if __name__ == "__main__":
 	print("Running MAC Monitor\n")
 
-	# TODO: get data from somewhere
-	data = [('f8-e0-79-bf-b0-64', '192.168.0.2'),
-			('f8-e0-79-bf-b0-63', '192.168.0.2'),
-			('f8-e0-79-bf-b0-62', '192.168.0.2'),] # list of current hosts
-	#data = []
+	data = scan_network()
 
 	new_devices = []
 	macs = []
 
-	for (mac, ip) in data:
+	for (ip, mac, desc) in data:
 		macs.append(mac)
 		if get_devid(mac):
 			if get_open_connection(mac, ip):
@@ -121,8 +128,8 @@ if __name__ == "__main__":
 			else:
 				insert_new_connection(mac, ip)
 		else:
-			new_devices.append((mac, ip,))
-			insert_new_device(mac)
+			new_devices.append((mac, ip, desc))
+			insert_new_device(mac, desc)
 			insert_new_connection(mac, ip)
 
 	close_missing_connections(macs)

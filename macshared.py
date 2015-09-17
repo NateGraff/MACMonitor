@@ -3,20 +3,15 @@ import sqlite3
 from datetime import datetime
 from tabulate import tabulate
 
-DATABASE_NAME = "macmonitor.db"
 FILE_PATH = "C:/Users/MyUsername/Desktop/"
+DATABASE_NAME = "C:/Path/To/macmonitor.db"
 NETWORK_SSID = "MyNetworkSSID"
 
 def create_notification(new_conns):
 	filename = "NEW_CONNECTIONS.txt"
-	message = "New connections detected on %s:\n" % NETWORK_SSID
-	data = []
+	message = "%s -- New connections detected on %s:\n" % (datetime.now(), NETWORK_SSID)
 
-	for (mac, ip) in new_conns:
-		start_date = get_connection_time(mac, ip)
-		data.append([mac, ip, start_date])
-
-	message += tabulate(data, ["MAC", "IP", "Joined Network"])
+	message += tabulate(new_conns, ["MAC", "IP", "Description"])
 	message += "\n\n"
 
 	with open(FILE_PATH + filename, 'a') as notif:

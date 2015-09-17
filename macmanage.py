@@ -108,7 +108,7 @@ def forget_device():
 			WHERE devid = ?
 			''', (int(devid),))
 	conn.commit()
-	conn.close()	
+	conn.close()
 
 if __name__ == "__main__":
 	print("Running MAC Manage\n")
