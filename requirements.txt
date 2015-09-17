@@ -1,9 +1,0 @@
-Python Modules:
----------------
-sqlite3
-tabulate
-
-System Tools:
--------------
-nmap
-Scheduled Tasks/cron
