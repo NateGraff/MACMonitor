@@ -76,6 +76,7 @@ def dump_database():
 			''')
 		data = c.fetchall()
 		print(tabulate(data, ["MAC", "Start Date", "Latest Date", "IP", "Open", "Description"], tablefmt="psql"))
+		print("%d rows retrieved" % len(data))
 
 def open_connections():
 	print("Open Connections:")
@@ -168,6 +169,7 @@ def device_history(limit):
 			connection_avg /= len(connections)
 			print("Average connection duration: %s" % str(timedelta(seconds=connection_avg)))
 			print(tabulate(output, ["Start", "End", "Duration", "IP", "Open"], tablefmt="psql"))
+			print("%d rows retrieved" % len(connections))
 
 if __name__ == "__main__":
 	print("Running MAC Manage\n")
