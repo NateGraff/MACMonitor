@@ -33,6 +33,7 @@ from tabulate import tabulate
 FILE_PATH = "C:/Users/MyUsername/Desktop/"
 DATABASE_NAME = "C:/Path/To/macmonitor.db"
 NETWORK_SSID = "MyNetworkSSID"
+ROUTER_IP = "192.168.0.1"
 
 def create_notification(new_conns):
 	filename = "NEW_CONNECTIONS.txt"

@@ -31,7 +31,7 @@ import sqlite3
 import subprocess
 import re
 
-from macshared import DATABASE_NAME, create_notification
+from macshared import DATABASE_NAME, ROUTER_IP, create_notification
 
 def get_open_connection(mac, ip):
 	with sqlite3.connect(DATABASE_NAME) as conn:
@@ -125,7 +125,7 @@ def insert_new_device(mac, desc):
 		conn.commit()
 
 def scan_network():
-	nmap_output = subprocess.check_output(["nmap", "-n", "-sP", "192.168.1.1/24"]).decode("utf-8")
+	nmap_output = subprocess.check_output(["nmap", "-n", "-sP", "%s/24" % ROUTER_IP]).decode("utf-8")
 	
 	host_pattern = r"Nmap scan report for (\d{3}\.\d{3}\.\d+?\.\d+).*?MAC Address: (.{17}) \((.*?)\)"
 	matcher = re.compile(host_pattern, re.DOTALL)

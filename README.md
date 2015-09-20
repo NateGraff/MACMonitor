@@ -19,7 +19,7 @@ futz with.
 
 
 ## Installation
-1. Edit `FILE_PATH`, `DATABASE_NAME`, `NETWORK_SSID` in macshared.py
+1. Edit `FILE_PATH`, `DATABASE_NAME`, `NETWORK_SSID`, `ROUTER_IP` in macshared.py
 2. Create the database with `python macmanage.py -c`
 3. Set up `python macmonitor.py` as scheduled task or cronjob
 
